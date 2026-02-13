@@ -1,0 +1,78 @@
+# 应用配置
+spring:
+  application:
+    name: springboot-security-demo
+
+  # 服务器配置
+  server:
+    port: 8080
+    servlet:
+      context-path: /
+
+  # H2数据库配置
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: sa
+    driver-class-name: org.h2.Driver
+
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  # H2控制台配置
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        trace: false
+        web-allow-others: false
+
+  # 缓存配置
+  cache:
+    type: caffeine
+    caffeine:
+      spec: initialCapacity=100,maximumSize=1000,expireAfterWrite=10m,recordStats
+
+  # 开发工具配置
+  devtools:
+    restart:
+      enabled: true
+      additional-paths: src/main/java
+
+  # 静态资源配置
+  web:
+    resources:
+      static-locations: classpath:/static/
+  mvc:
+    static-path-pattern: /**
+
+# JWT配置
+jwt:
+  secret: xiaoniucode_spring_security_jwt_secret_key
+  expiration: 3600000
+
+# 安全配置
+security:
+  permit-all:
+    paths:
+      - /api/auth/**
+      - /h2-console/**
+      - /login.html
+      - /test.html
+      - /index.html
+      - /static/**
+
+# 日志配置
+logging:
+  level:
+    root: info
+    org.springframework.security: debug
+    com.xiaoniucode: debug

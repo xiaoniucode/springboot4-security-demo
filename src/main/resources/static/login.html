@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 400px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #40a9ff;
+        }
+        .tab {
+            display: flex;
+            margin-bottom: 30px;
+        }
+        .tab button {
+            flex: 1;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0 5px;
+        }
+        .tab button.active {
+            background-color: #1890ff;
+            color: white;
+        }
+        .form-panel {
+            display: none;
+        }
+        .form-panel.active {
+            display: block;
+        }
+        #message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .success {
+            background-color: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+        .error {
+            background-color: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #f5222d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>用户认证</h1>
+        
+        <div class="tab">
+            <button class="active" onclick="openTab('login')">登录</button>
+            <button onclick="openTab('register')">注册</button>
+        </div>
+        
+        <div id="login" class="form-panel active">
+            <div class="form-group">
+                <label for="login-username">用户名</label>
+                <input type="text" id="login-username" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">密码</label>
+                <input type="password" id="login-password" required>
+            </div>
+            <button onclick="login()">登录</button>
+        </div>
+        
+        <div id="register" class="form-panel">
+            <div class="form-group">
+                <label for="register-username">用户名</label>
+                <input type="text" id="register-username" required>
+            </div>
+            <div class="form-group">
+                <label for="register-password">密码</label>
+                <input type="password" id="register-password" required>
+            </div>
+            <button onclick="register()">注册</button>
+        </div>
+        
+        <div id="message"></div>
+    </div>
+    
+    <script>
+        function openTab(tabName) {
+            var tabs = document.getElementsByClassName('form-panel');
+            var tabButtons = document.getElementsByClassName('tab')[0].getElementsByTagName('button');
+            
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+                tabButtons[i].classList.remove('active');
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+        
+        function showMessage(message, type) {
+            var messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = message;
+            messageDiv.className = type;
+            setTimeout(function() {
+                messageDiv.innerHTML = '';
+                messageDiv.className = '';
+            }, 3000);
+        }
+        
+        function login() {
+            var username = document.getElementById('login-username').value;
+            var password = document.getElementById('login-password').value;
+            
+            fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username: username, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 0) {
+                    showMessage('登录成功', 'success');
+                    localStorage.setItem('token', data.data.token);
+                    localStorage.setItem('username', data.data.username);
+                    // 登录成功后跳转到首页
+                    setTimeout(() => {
+                        window.location.href = '/index.html';
+                    }, 1000);
+                } else {
+                    showMessage(data.msg, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('登录失败', 'error');
+            });
+        }
+        
+        function register() {
+            var username = document.getElementById('register-username').value;
+            var password = document.getElementById('register-password').value;
+            
+            fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username: username, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 0) {
+                    showMessage('注册成功', 'success');
+                    openTab('login');
+                } else {
+                    showMessage(data.msg, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('注册失败', 'error');
+            });
+        }
+    </script>
+</body>
+</html>

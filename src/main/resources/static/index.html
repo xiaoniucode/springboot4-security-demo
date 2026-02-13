@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+        .header {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-info {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin: 0;
+        }
+        h2 {
+            color: #555;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #666;
+            margin-right: 10px;
+        }
+        .info-value {
+            color: #333;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background-color: #1890ff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #40a9ff;
+        }
+        .btn-danger {
+            background-color: #ff4d4f;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #ff7875;
+        }
+        .btn-default {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .btn-default:hover {
+            background-color: #e0e0e0;
+        }
+        .welcome-message {
+            font-size: 18px;
+            color: #666;
+        }
+        .token-display {
+            font-family: monospace;
+            font-size: 12px;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>欢迎使用系统</h1>
+            <div>
+                <span class="welcome-message" id="welcome-message">未登录</span>
+            </div>
+        </div>
+        
+        <div class="user-info">
+            <h2>用户信息</h2>
+            
+            <div class="info-item">
+                <span class="info-label">用户名：</span>
+                <span class="info-value" id="username">-</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">登录状态：</span>
+                <span class="info-value" id="login-status">未登录</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Token：</span>
+                <div class="token-display" id="token">-</div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="testProtectedApi()">测试认证接口</button>
+                <button class="btn-danger" onclick="logout()">退出登录</button>
+                <button class="btn-default" onclick="goToLogin()">返回登录页</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function updateUserInfo() {
+            const username = localStorage.getItem('username');
+            const token = localStorage.getItem('token');
+            
+            if (username && token) {
+                document.getElementById('welcome-message').textContent = `欢迎，${username}`;
+                document.getElementById('username').textContent = username;
+                document.getElementById('login-status').textContent = '已登录';
+                document.getElementById('token').textContent = token;
+            } else {
+                document.getElementById('welcome-message').textContent = '未登录';
+                document.getElementById('username').textContent = '-';
+                document.getElementById('login-status').textContent = '未登录';
+                document.getElementById('token').textContent = '-';
+                
+                // 如果未登录，跳转到登录页
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 2000);
+            }
+        }
+        
+        function testProtectedApi() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('请先登录');
+                return;
+            }
+            
+            fetch('/api/protected', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 0) {
+                    alert('测试成功：' + data.data);
+                } else {
+                    alert('测试失败：' + data.msg);
+                }
+            })
+            .catch(error => {
+                alert('请求失败');
+            });
+        }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            updateUserInfo();
+            alert('已退出登录');
+        }
+        
+        function goToLogin() {
+            window.location.href = '/login.html';
+        }
+        
+        // 页面加载时更新用户信息
+        window.onload = function() {
+            updateUserInfo();
+        };
+        
+        // 从登录页跳转后自动更新
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'token' || e.key === 'username') {
+                updateUserInfo();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试认证</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .test-section {
+            margin: 40px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        h2 {
+            color: #555;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #40a9ff;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f5f5f5;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+        .error {
+            background-color: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #f5222d;
+        }
+        #token-info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e6f7ff;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>认证测试</h1>
+    
+    <div id="token-info">
+        <h3>当前Token信息</h3>
+        <p>用户名: <span id="current-username"></span></p>
+        <p>Token: <span id="current-token"></span></p>
+    </div>
+    
+    <div class="test-section">
+        <h2>1. 测试公开接口</h2>
+        <button onclick="testPublicApi()">测试公开接口</button>
+        <div id="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 测试需要认证的接口</h2>
+        <button onclick="testProtectedApi()">测试需要认证的接口</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Token管理</h2>
+        <button onclick="clearToken()">清除Token</button>
+        <button onclick="goToLogin()">返回登录页</button>
+    </div>
+    
+    <script>
+        function updateTokenInfo() {
+            const username = localStorage.getItem('username');
+            const token = localStorage.getItem('token');
+            document.getElementById('current-username').textContent = username || '未登录';
+            document.getElementById('current-token').textContent = token || '无';
+        }
+        
+        function showResult(data, isSuccess) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+            resultDiv.className = isSuccess ? 'success' : 'error';
+        }
+        
+        function testPublicApi() {
+            fetch('/api/public')
+                .then(response => response.json())
+                .then(data => {
+                    showResult(data, true);
+                })
+                .catch(error => {
+                    showResult({ code: 1, msg: '请求失败' }, false);
+                });
+        }
+        
+        function testProtectedApi() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showResult({ code: 1, msg: '请先登录获取Token' }, false);
+                return;
+            }
+            
+            fetch('/api/protected', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                showResult(data, data.code === 0);
+            })
+            .catch(error => {
+                showResult({ code: 1, msg: '请求失败' }, false);
+            });
+        }
+        
+        function clearToken() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            updateTokenInfo();
+            showResult({ code: 0, msg: 'Token已清除' }, true);
+        }
+        
+        function goToLogin() {
+            window.location.href = '/login.html';
+        }
+        
+        // 页面加载时更新Token信息
+        updateTokenInfo();
+    </script>
+</body>
+</html>
